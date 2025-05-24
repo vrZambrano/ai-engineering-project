@@ -1,17 +1,44 @@
-# API de Produção de Vinhos EMPRAPA
+# API de Dados Vitivinícolas EMBRAPA
 
-Esta é uma API FastAPI que fornece dados sobre a produção anual de vinhos e derivados no Rio Grande do Sul, obtidos através de web scraping do site da Embrapa Vitibrasil.
+Esta é uma API FastAPI completa que fornece acesso aos dados vitivinícolas do Rio Grande do Sul através de web scraping do site da Embrapa Vitibrasil. A API oferece dados sobre produção de vinhos e processamento de diferentes tipos de uvas.
 
-## Funcionalidades
+## 🍇 Funcionalidades
 
-- Expõe um endpoint `/producao` que aceita um ano como parâmetro.
-- Realiza scraping dos dados de produção do site da Embrapa para o ano especificado.
-- Analisa a tabela HTML de dados, lidando com uma estrutura hierárquica de produtos e subprodutos.
-- Retorna os dados em formato JSON, incluindo os itens de produção e o total geral em litros.
-- Implementa um mecanismo de retentativas com backoff exponencial e jitter para lidar com falhas de rede ou instabilidade do site da Embrapa.
-- Registra informações e erros durante o processo.
+A API oferece 5 endpoints principais organizados em duas categorias:
 
-## Requisitos
+### **Produção de Vinhos**
+- **`/producao`** - Dados de produção anual de vinhos e derivados (em litros)
+
+### **Processamento de Uvas**
+- **`/processamento/viniferas`** - Processamento de uvas viníferas (em kg)
+- **`/processamento/americanas_hibridas`** - Processamento de uvas americanas e híbridas (em kg)
+- **`/processamento/uvas_mesa`** - Processamento de uvas de mesa (em kg)
+- **`/processamento/sem_classificacao`** - Processamento de uvas sem classificação (em kg)
+
+## 🏗️ Arquitetura
+
+```
+ai-engineering-project/
+├── src/
+│   ├── main.py                    # API FastAPI com todos os endpoints
+│   ├── data/
+│   │   └── embrapa_scraper.py     # Módulo de parsing HTML especializado
+│   └── api/                       # Estrutura para expansões futuras
+├── tests/                         # Testes unitários
+├── docs/                          # Documentação adicional
+├── requirements.txt               # Dependências Python
+└── README.md                      # Este arquivo
+```
+
+### Características Técnicas
+
+- **Arquitetura Modular**: Separação clara entre lógica de API e parsing de dados
+- **Retry com Backoff Exponencial**: Mecanismo robusto de tentativas com jitter
+- **Logging Estruturado**: Rastreamento completo de operações e erros
+- **Tratamento de Erros Específicos**: Códigos HTTP apropriados para diferentes falhas
+- **Parsing HTML Especializado**: Funções dedicadas para cada tipo de tabela
+
+## 📋 Requisitos
 
 - Python 3.7+
 - FastAPI
@@ -19,44 +46,56 @@ Esta é uma API FastAPI que fornece dados sobre a produção anual de vinhos e d
 - Requests
 - BeautifulSoup4
 
-Você pode instalar as dependências com:
+### Instalação
+
 ```bash
-pip install fastapi uvicorn requests beautifulsoup4
+# Clone o repositório
+git clone <repository-url>
+cd ai-engineering-project
+
+# Instale as dependências
+pip install -r requirements.txt
 ```
 
-## Como Executar
+## 🚀 Como Executar
 
-1. Certifique-se de que todas as dependências estão instaladas.
-2. Execute o servidor Uvicorn a partir do diretório do projeto:
+### Desenvolvimento
+```bash
+# A partir do diretório raiz do projeto
+uvicorn src.main:app --host 0.0.0.0 --port 8888 --reload
+```
 
-   ```bash
-   uvicorn main:app --host 0.0.0.0 --port 8888 --reload
-   ```
+### Produção
+```bash
+uvicorn src.main:app --host 0.0.0.0 --port 8888
+```
 
-   - `main`: refere-se ao arquivo `main.py`.
-   - `app`: é a instância FastAPI criada em `main.py`.
-   - `--host 0.0.0.0`: torna o servidor acessível na rede local.
-   - `--port 8888`: especifica a porta em que o servidor será executado.
-   - `--reload`: ativa o recarregamento automático do servidor quando o código é alterado (útil para desenvolvimento).
+### Execução Direta
+```bash
+# Execute o arquivo main.py diretamente
+cd src
+python main.py
+```
 
-## Endpoint da API
+A API estará disponível em: `http://localhost:8888`
 
-### `GET /producao`
+## 📚 Documentação dos Endpoints
 
-Recupera os dados de produção de vinhos e derivados para um ano específico.
+### 1. Produção de Vinhos
 
-**Parâmetros da Query:**
+#### `GET /producao`
 
-- `ano` (obrigatório, inteiro): O ano da produção desejada. Deve estar entre 1970 e 2023 (inclusive).
+Recupera dados de produção anual de vinhos e derivados no Rio Grande do Sul.
+
+**Parâmetros:**
+- `ano` (obrigatório): Ano da produção (1970-2023)
 
 **Exemplo de Requisição:**
-
+```bash
+curl "http://localhost:8888/producao?ano=2022"
 ```
-GET http://localhost:8888/producao?ano=2022
-```
 
-**Exemplo de Resposta Bem-Sucedida (200 OK):**
-
+**Exemplo de Resposta:**
 ```json
 {
   "ano": 2022,
@@ -87,41 +126,206 @@ GET http://localhost:8888/producao?ano=2022
           "produto": "Tinto",
           "quantidade_litros": "24417918"
         },
-        // ... mais subitens
+        {
+          "produto": "Branco",
+          "quantidade_litros": "23093878"
+        }
       ]
     }
-    // ... mais itens principais
   ],
-  "total_geral_litros": "308352487" // Exemplo, o valor real será o do ano consultado
+  "total_geral_litros": "308352487"
 }
 ```
 
-**Respostas de Erro:**
+### 2. Processamento de Uvas Viníferas
 
-- `400 Bad Request`: Se o parâmetro `ano` estiver ausente ou fora do intervalo permitido.
-- `422 Unprocessable Entity`: Se o parâmetro `ano` não for um inteiro válido.
-- `500 Internal Server Error`: Se ocorrer um erro inesperado durante o processamento ou parsing.
-- `502 Bad Gateway`: Se houver um erro genérico ao acessar o site da Embrapa após múltiplas tentativas.
-- `503 Service Unavailable`: Se houver um erro de conexão ao acessar o site da Embrapa após múltiplas tentativas.
-- `504 Gateway Timeout`: Se ocorrer um timeout ao acessar o site da Embrapa após múltiplas tentativas.
-- Outros códigos HTTP (ex: 404, 500) podem ser retornados diretamente do site da Embrapa se a tentativa de scraping falhar com esses códigos.
+#### `GET /processamento/viniferas`
 
-## Estrutura do Código (`main.py`)
+Dados de processamento anual de uvas viníferas por cultivar.
 
-- **`FastAPI app`**: Instância principal da aplicação FastAPI.
-- **`BASE_URL`**: URL base do site Vitibrasil da Embrapa.
-- **`parse_table(html: str) -> dict`**: Função auxiliar que recebe o conteúdo HTML de uma página e extrai os dados da tabela de produção.
-  - Utiliza `BeautifulSoup` para analisar o HTML.
-  - Identifica itens principais (`tb_item`) e subitens (`tb_subitem`) para construir uma estrutura de dados aninhada.
-  - Retorna um dicionário contendo os cabeçalhos da tabela, os itens de produção e o total geral.
-- **`producao(ano: int) -> JSONResponse`**: Função do endpoint assíncrono que lida com as requisições GET para `/producao`.
-  - Constrói os parâmetros para a requisição ao site da Embrapa.
-  - Implementa um loop de retentativas com backoff exponencial para buscar os dados.
-  - Chama `parse_table` para processar o HTML obtido.
-  - Retorna os dados formatados como `JSONResponse` ou levanta `HTTPException` em caso de erros.
-- **`if __name__ == "__main__":`**: Bloco para executar o servidor Uvicorn diretamente ao rodar o script.
+**Parâmetros:**
+- `ano` (obrigatório): Ano do processamento (1970-2023)
 
-## Observações
+**Exemplo de Requisição:**
+```bash
+curl "http://localhost:8888/processamento/viniferas?ano=2022"
+```
 
-- O scraping depende da estrutura HTML do site da Embrapa. Mudanças no site podem quebrar o parser.
-- Os valores de quantidade são retornados como strings, pois o site os formata com pontos (ex: "195.031.611"). A conversão para números inteiros pode ser feita pelo cliente da API, se necessário.
+**Exemplo de Resposta:**
+```json
+{
+  "ano": 2022,
+  "dados": [
+    {
+      "categoria": "TINTAS",
+      "quantidade_kg": "45123456",
+      "cultivares": [
+        {
+          "cultivar": "Cabernet Sauvignon",
+          "quantidade_kg": "12345678"
+        },
+        {
+          "cultivar": "Merlot",
+          "quantidade_kg": "9876543"
+        }
+      ]
+    },
+    {
+      "categoria": "BRANCAS E ROSADAS",
+      "quantidade_kg": "23456789",
+      "cultivares": [
+        {
+          "cultivar": "Chardonnay",
+          "quantidade_kg": "8765432"
+        }
+      ]
+    }
+  ],
+  "total_geral_kg": "68580245"
+}
+```
+
+### 3. Processamento de Uvas Americanas e Híbridas
+
+#### `GET /processamento/americanas_hibridas`
+
+Dados de processamento anual de uvas americanas e híbridas.
+
+**Parâmetros:**
+- `ano` (obrigatório): Ano do processamento (1970-2023)
+
+**Estrutura de resposta similar ao endpoint de viníferas, mas com cultivares americanas e híbridas.**
+
+### 4. Processamento de Uvas de Mesa
+
+#### `GET /processamento/uvas_mesa`
+
+Dados de processamento anual de uvas de mesa por cultivar.
+
+**Parâmetros:**
+- `ano` (obrigatório): Ano do processamento (1970-2023)
+
+**Estrutura de resposta similar, organizada por categorias de uvas de mesa.**
+
+### 5. Processamento de Uvas Sem Classificação
+
+#### `GET /processamento/sem_classificacao`
+
+Dados de processamento anual de uvas sem classificação específica.
+
+**Parâmetros:**
+- `ano` (obrigatório): Ano do processamento (1970-2023)
+
+**Exemplo de Resposta:**
+```json
+{
+  "ano": 2022,
+  "dados": [
+    {
+      "item": "SEM CLASSIFICAÇÃO",
+      "quantidade_kg": "1234567"
+    }
+  ],
+  "total_geral_kg": "1234567"
+}
+```
+
+## ⚠️ Códigos de Erro
+
+Todos os endpoints podem retornar os seguintes códigos de erro:
+
+- **400 Bad Request**: Parâmetro `ano` ausente ou fora do intervalo (1970-2023)
+- **422 Unprocessable Entity**: Parâmetro `ano` não é um inteiro válido
+- **500 Internal Server Error**: Erro no processamento ou parsing dos dados
+- **502 Bad Gateway**: Erro genérico ao acessar o site da Embrapa
+- **503 Service Unavailable**: Erro de conexão com o site da Embrapa
+- **504 Gateway Timeout**: Timeout ao acessar o site da Embrapa
+
+## 🔧 Detalhes Técnicos
+
+### Mecanismo de Retry
+
+- **Máximo de tentativas**: 5
+- **Backoff exponencial**: Delay inicial de 5s, máximo de 60s
+- **Jitter**: Variação aleatória de 1-3s para evitar thundering herd
+- **Timeouts**: Conexão 10s, leitura 30s
+
+### Parsing de Dados
+
+O módulo `embrapa_scraper.py` contém funções especializadas para cada tipo de tabela:
+
+- `parse_table_producao()`: Tabelas de produção com estrutura hierárquica
+- `parse_table_processamento_viniferas()`: Tabelas de processamento por cultivar
+- `parse_table_processamento_americanas_hibridas()`: Uvas americanas e híbridas
+- `parse_table_processamento_uvas_mesa()`: Uvas de mesa
+- `parse_table_processamento_sem_classificacao()`: Dados sem classificação
+
+### Logging
+
+O sistema registra:
+- Tentativas de acesso ao site da Embrapa
+- Sucessos e falhas de requisições
+- Erros de parsing e processamento
+- Tempos de retry e backoff
+
+## 📊 Documentação Interativa
+
+Após iniciar a API, acesse:
+
+- **Swagger UI**: `http://localhost:8888/docs`
+- **ReDoc**: `http://localhost:8888/redoc`
+
+## 🔍 Exemplos de Uso
+
+### Comparar Produção vs Processamento
+```bash
+# Produção de vinhos em 2022 (litros)
+curl "http://localhost:8888/producao?ano=2022"
+
+# Processamento de uvas viníferas em 2022 (kg)
+curl "http://localhost:8888/processamento/viniferas?ano=2022"
+```
+
+### Análise Temporal
+```bash
+# Dados de diferentes anos
+curl "http://localhost:8888/producao?ano=2020"
+curl "http://localhost:8888/producao?ano=2021"
+curl "http://localhost:8888/producao?ano=2022"
+```
+
+### Análise por Tipo de Uva
+```bash
+# Diferentes tipos de processamento
+curl "http://localhost:8888/processamento/viniferas?ano=2022"
+curl "http://localhost:8888/processamento/americanas_hibridas?ano=2022"
+curl "http://localhost:8888/processamento/uvas_mesa?ano=2022"
+```
+
+## 📝 Observações Importantes
+
+1. **Dependência Externa**: O scraping depende da estrutura HTML do site da Embrapa. Mudanças no site podem afetar o funcionamento.
+
+2. **Formato de Números**: Os valores são retornados como strings no formato brasileiro (ex: "195.031.611"). A conversão para números pode ser feita pelo cliente.
+
+3. **Diferença de Unidades**: 
+   - Produção: medida em **litros**
+   - Processamento: medido em **quilogramas**
+
+4. **Período de Dados**: Disponível para anos entre 1970 e 2023 (conforme disponibilidade no site da Embrapa).
+
+5. **Rate Limiting**: O sistema implementa delays automáticos para não sobrecarregar o servidor da Embrapa.
+
+## 🤝 Contribuição
+
+Para contribuir com o projeto:
+
+1. Faça um fork do repositório
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
