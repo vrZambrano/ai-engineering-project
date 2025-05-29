@@ -1,5 +1,6 @@
 // Configuração da API
 // Como o frontend agora é servido pelo mesmo servidor, usamos URL relativa
+// Atualizado: Cabeçalhos das tabelas de Produção/Comercialização alterados
 const API_BASE_URL = '';
 
 // Mapeamento das subcategorias
@@ -251,7 +252,7 @@ function formatarDados(data, categoria) {
         const isProducaoOuComercializacao = categoria === 'producao' || categoria === 'comercializacao';
         const isProcessamento = categoria === 'processamento';
         
-        if (isProducaoOuComercializacao && data.dados.some(item => item.subitens && Array.isArray(item.subitens))) {
+        if (isProducaoOuComercializacao && data.dados.some(item => item.subitems && Array.isArray(item.subitems))) {
             html += formatarTabelaExpandida(data.dados, 'producao');
         } else if (isProcessamento && data.dados.some(item => item.cultivares && Array.isArray(item.cultivares))) {
             html += formatarTabelaExpandida(data.dados, 'processamento');
@@ -323,24 +324,24 @@ function formatarTabelaExpandida(dados, tipo) {
     } else {
         // Cabeçalho para Produção/Comercialização
         html += '<thead><tr>';
-        html += '<th>Produto Principal</th>';
-        html += '<th>Quantidade Total (Litros)</th>';
-        html += '<th>Produto Subitem</th>';
-        html += '<th>Quantidade Subitem (Litros)</th>';
+        html += '<th>Tipo Produto</th>';
+        html += '<th>Total Quantidade (Litros)</th>';
+        html += '<th>Produto</th>';
+        html += '<th>Quantidade (Litros)</th>';
         html += '</tr></thead>';
         
         // Dados expandidos para Produção/Comercialização
         html += '<tbody>';
         dados.forEach(item => {
-            if (item.subitens && Array.isArray(item.subitens) && item.subitens.length > 0) {
+            if (item.subitems && Array.isArray(item.subitems) && item.subitems.length > 0) {
                 // Para cada subitem, cria uma linha
-                item.subitens.forEach((subitem, index) => {
+                item.subitems.forEach((subitem, index) => {
                     html += '<tr>';
                     
                     // Produto principal e quantidade total (só na primeira linha do grupo)
                     if (index === 0) {
-                        html += `<td rowspan="${item.subitens.length}">${item.produto || '-'}</td>`;
-                        html += `<td rowspan="${item.subitens.length}">${formatarNumero(item.quantidade_litros)}</td>`;
+                        html += `<td rowspan="${item.subitems.length}">${item.produto || '-'}</td>`;
+                        html += `<td rowspan="${item.subitems.length}">${formatarNumero(item.quantidade_litros)}</td>`;
                     }
                     
                     // Dados do subitem
@@ -350,7 +351,7 @@ function formatarTabelaExpandida(dados, tipo) {
                     html += '</tr>';
                 });
             } else {
-                // Se não tem subitens, mostra só o item principal
+                // Se não tem subitems, mostra só o item principal
                 html += '<tr>';
                 html += `<td>${item.produto || '-'}</td>`;
                 html += `<td>${formatarNumero(item.quantidade_litros)}</td>`;
@@ -402,11 +403,12 @@ function formatarChave(key) {
         'valor': 'Valor',
         'pais': 'País',
         'cultivar': 'Cultivar',
+        'valor_usd': 'Valor (US$)',
         'tipo': 'Tipo',
         'ano': 'Ano',
         'categoria': 'Categoria',
         'subcategoria': 'Subcategoria',
-        'subitens': 'Subitens'
+        'subitems': 'Subitems'
     };
     
     return mapeamento[key] || key.charAt(0).toUpperCase() + key.slice(1);
