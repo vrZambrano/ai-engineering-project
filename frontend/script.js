@@ -130,6 +130,12 @@ async function consultarAPI(endpoint, ano) {
         }
         
         const data = await response.json();
+        
+        // Armazena os dados para download
+        currentData = data;
+        currentEndpoint = endpoint;
+        currentYear = ano;
+        
         showResults(data, endpoint, ano);
         
     } catch (error) {
@@ -148,6 +154,9 @@ function hideAllSections() {
     loading.style.display = 'none';
     resultsSection.style.display = 'none';
     errorSection.style.display = 'none';
+    if (downloadButtons) {
+        downloadButtons.style.display = 'none';
+    }
     consultarBtn.disabled = false;
 }
 
@@ -172,7 +181,12 @@ function showResults(data, endpoint, ano) {
     `;
     
     // Monta o conteúdo do resultado
-    resultContent.innerHTML = formatarDados(data);
+    resultContent.innerHTML = formatarDados(data, categoria);
+    
+    // Mostra os botões de download
+    if (downloadButtons) {
+        downloadButtons.style.display = 'flex';
+    }
     
     resultsSection.style.display = 'block';
 }
@@ -209,7 +223,7 @@ function formatarTitulo(categoria, subcategoria) {
     return titulos[categoria] || 'Dados EMBRAPA';
 }
 
-function formatarDados(data) {
+function formatarDados(data, categoria) {
     if (!data || typeof data !== 'object') {
         return '<p>Nenhum dado encontrado.</p>';
     }
@@ -232,26 +246,18 @@ function formatarDados(data) {
     // Dados específicos
     if (data.dados && Array.isArray(data.dados) && data.dados.length > 0) {
         html += '<h4>Dados Detalhados:</h4>';
-        html += '<table class="data-table">';
         
-        // Cabeçalho da tabela
-        const firstItem = data.dados[0];
-        html += '<thead><tr>';
-        Object.keys(firstItem).forEach(key => {
-            html += `<th>${formatarChave(key)}</th>`;
-        });
-        html += '</tr></thead>';
+        // Verifica se é Produção, Comercialização ou Processamento (que têm subitens para expandir)
+        const isProducaoOuComercializacao = categoria === 'producao' || categoria === 'comercializacao';
+        const isProcessamento = categoria === 'processamento';
         
-        // Dados da tabela
-        html += '<tbody>';
-        data.dados.forEach(item => {
-            html += '<tr>';
-            Object.values(item).forEach(value => {
-                html += `<td>${formatarValor(value)}</td>`;
-            });
-            html += '</tr>';
-        });
-        html += '</tbody></table>';
+        if (isProducaoOuComercializacao && data.dados.some(item => item.subitens && Array.isArray(item.subitens))) {
+            html += formatarTabelaExpandida(data.dados, 'producao');
+        } else if (isProcessamento && data.dados.some(item => item.cultivares && Array.isArray(item.cultivares))) {
+            html += formatarTabelaExpandida(data.dados, 'processamento');
+        } else {
+            html += formatarTabelaSimples(data.dados);
+        }
     } else {
         // Se não há array de dados, mostra os campos diretamente
         html += '<div class="data-grid">';
@@ -271,10 +277,127 @@ function formatarDados(data) {
     return html;
 }
 
+// Função para formatar tabela expandida (Produção/Comercialização/Processamento)
+function formatarTabelaExpandida(dados, tipo) {
+    let html = '<table class="data-table">';
+    
+    if (tipo === 'processamento') {
+        // Cabeçalho para Processamento
+        html += '<thead><tr>';
+        html += '<th>Produto Principal</th>';
+        html += '<th>Quantidade Total (Kg)</th>';
+        html += '<th>Cultivar</th>';
+        html += '<th>Quantidade Cultivar (Kg)</th>';
+        html += '</tr></thead>';
+        
+        // Dados expandidos para Processamento
+        html += '<tbody>';
+        dados.forEach(item => {
+            if (item.cultivares && Array.isArray(item.cultivares) && item.cultivares.length > 0) {
+                // Para cada cultivar, cria uma linha
+                item.cultivares.forEach((cultivar, index) => {
+                    html += '<tr>';
+                    
+                    // Produto principal e quantidade total (só na primeira linha do grupo)
+                    if (index === 0) {
+                        html += `<td rowspan="${item.cultivares.length}">${item.categoria || item.produto || '-'}</td>`;
+                        html += `<td rowspan="${item.cultivares.length}">${formatarNumero(item.quantidade_kg)}</td>`;
+                    }
+                    
+                    // Dados do cultivar
+                    html += `<td>${cultivar.cultivar || '-'}</td>`;
+                    html += `<td>${formatarNumero(cultivar.quantidade_kg)}</td>`;
+                    
+                    html += '</tr>';
+                });
+            } else {
+                // Se não tem cultivares, mostra só o item principal
+                html += '<tr>';
+                html += `<td>${item.categoria || item.produto || '-'}</td>`;
+                html += `<td>${formatarNumero(item.quantidade_kg)}</td>`;
+                html += '<td>-</td>';
+                html += '<td>-</td>';
+                html += '</tr>';
+            }
+        });
+    } else {
+        // Cabeçalho para Produção/Comercialização
+        html += '<thead><tr>';
+        html += '<th>Produto Principal</th>';
+        html += '<th>Quantidade Total (Litros)</th>';
+        html += '<th>Produto Subitem</th>';
+        html += '<th>Quantidade Subitem (Litros)</th>';
+        html += '</tr></thead>';
+        
+        // Dados expandidos para Produção/Comercialização
+        html += '<tbody>';
+        dados.forEach(item => {
+            if (item.subitens && Array.isArray(item.subitens) && item.subitens.length > 0) {
+                // Para cada subitem, cria uma linha
+                item.subitens.forEach((subitem, index) => {
+                    html += '<tr>';
+                    
+                    // Produto principal e quantidade total (só na primeira linha do grupo)
+                    if (index === 0) {
+                        html += `<td rowspan="${item.subitens.length}">${item.produto || '-'}</td>`;
+                        html += `<td rowspan="${item.subitens.length}">${formatarNumero(item.quantidade_litros)}</td>`;
+                    }
+                    
+                    // Dados do subitem
+                    html += `<td>${subitem.produto || subitem.cultivar || subitem.tipo || '-'}</td>`;
+                    html += `<td>${formatarNumero(subitem.quantidade_litros || subitem.quantidade)}</td>`;
+                    
+                    html += '</tr>';
+                });
+            } else {
+                // Se não tem subitens, mostra só o item principal
+                html += '<tr>';
+                html += `<td>${item.produto || '-'}</td>`;
+                html += `<td>${formatarNumero(item.quantidade_litros)}</td>`;
+                html += '<td>-</td>';
+                html += '<td>-</td>';
+                html += '</tr>';
+            }
+        });
+    }
+    
+    html += '</tbody></table>';
+    return html;
+}
+
+// Função para formatar tabela simples (outros endpoints)
+function formatarTabelaSimples(dados) {
+    let html = '<table class="data-table">';
+    
+    // Cabeçalho da tabela
+    const firstItem = dados[0];
+    html += '<thead><tr>';
+    Object.keys(firstItem).forEach(key => {
+        html += `<th>${formatarChave(key)}</th>`;
+    });
+    html += '</tr></thead>';
+    
+    // Dados da tabela
+    html += '<tbody>';
+    dados.forEach(item => {
+        html += '<tr>';
+        Object.values(item).forEach(value => {
+            html += `<td>${formatarValor(value)}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    
+    return html;
+}
+
 function formatarChave(key) {
     const mapeamento = {
         'produto': 'Produto',
         'quantidade': 'Quantidade',
+        'quantidade_litros': 'Quantidade (Litros)',
+        'quantidade_kg': 'Quantidade (Kg)',
+        'cultivares': 'Cultivares',
         'unidade': 'Unidade',
         'valor': 'Valor',
         'pais': 'País',
@@ -282,7 +405,8 @@ function formatarChave(key) {
         'tipo': 'Tipo',
         'ano': 'Ano',
         'categoria': 'Categoria',
-        'subcategoria': 'Subcategoria'
+        'subcategoria': 'Subcategoria',
+        'subitens': 'Subitens'
     };
     
     return mapeamento[key] || key.charAt(0).toUpperCase() + key.slice(1);
@@ -310,6 +434,10 @@ function formatarValor(value) {
                     return `${item.cultivar}: ${formatarNumero(item.quantidade)}`;
                 } else if (item.tipo && item.quantidade) {
                     return `${item.tipo}: ${formatarNumero(item.quantidade)}`;
+                } else if (item.produto && item.quantidade_litros) {
+                    return `${item.produto}: ${formatarNumero(item.quantidade_litros)}`;
+                } else if (item.cultivar && item.quantidade_kg) {
+                    return `${item.cultivar}: ${formatarNumero(item.quantidade_kg)} kg`;
                 } else {
                     // Fallback para outros tipos de objeto
                     return Object.entries(item)
@@ -358,3 +486,148 @@ async function testarConexao() {
 
 // Testa a conexão quando a página carrega
 document.addEventListener('DOMContentLoaded', testarConexao);
+
+// Variáveis globais para download
+let currentData = null;
+let currentEndpoint = null;
+let currentYear = null;
+
+// Elementos de download
+const downloadButtons = document.getElementById('downloadButtons');
+const downloadJsonBtn = document.getElementById('downloadJson');
+const downloadCsvBtn = document.getElementById('downloadCsv');
+
+// Event listeners para download
+if (downloadJsonBtn && downloadCsvBtn) {
+    downloadJsonBtn.addEventListener('click', downloadJson);
+    downloadCsvBtn.addEventListener('click', downloadCsv);
+}
+
+// Função para download em JSON
+function downloadJson() {
+    if (!currentData) {
+        alert('Nenhum dado disponível para download.');
+        return;
+    }
+    
+    const jsonString = JSON.stringify(currentData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const filename = generateFilename('json');
+    downloadFile(url, filename);
+}
+
+// Função para download em CSV
+function downloadCsv() {
+    if (!currentData) {
+        alert('Nenhum dado disponível para download.');
+        return;
+    }
+    
+    const csvString = convertToCSV(currentData);
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const filename = generateFilename('csv');
+    downloadFile(url, filename);
+}
+
+// Função para converter dados para CSV
+function convertToCSV(data) {
+    if (!data.dados || !Array.isArray(data.dados) || data.dados.length === 0) {
+        return 'Nenhum dado disponível';
+    }
+    
+    // Função para achatar objetos aninhados
+    function flattenObject(obj, prefix = '') {
+        const flattened = {};
+        
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const value = obj[key];
+                const newKey = prefix ? `${prefix}_${key}` : key;
+                
+                if (Array.isArray(value)) {
+                    // Para arrays, criar uma string concatenada
+                    if (value.length > 0 && typeof value[0] === 'object') {
+                        // Array de objetos - criar string formatada
+                        flattened[newKey] = value.map(item => {
+                            if (item.cultivar && item.quantidade_kg) {
+                                return `${item.cultivar}: ${item.quantidade_kg}`;
+                            } else if (item.produto && item.quantidade_litros) {
+                                return `${item.produto}: ${item.quantidade_litros}`;
+                            } else {
+                                return JSON.stringify(item);
+                            }
+                        }).join('; ');
+                    } else {
+                        flattened[newKey] = value.join('; ');
+                    }
+                } else if (typeof value === 'object' && value !== null) {
+                    // Objeto aninhado - achatar recursivamente
+                    Object.assign(flattened, flattenObject(value, newKey));
+                } else {
+                    flattened[newKey] = value;
+                }
+            }
+        }
+        
+        return flattened;
+    }
+    
+    // Achatar todos os objetos de dados
+    const flattenedData = data.dados.map(item => flattenObject(item));
+    
+    if (flattenedData.length === 0) {
+        return 'Nenhum dado disponível';
+    }
+    
+    // Obter todas as chaves únicas
+    const allKeys = [...new Set(flattenedData.flatMap(Object.keys))];
+    
+    // Criar cabeçalho CSV
+    const header = allKeys.map(key => `"${key}"`).join(',');
+    
+    // Criar linhas CSV
+    const rows = flattenedData.map(item => {
+        return allKeys.map(key => {
+            const value = item[key] || '';
+            // Escapar aspas duplas e envolver em aspas se necessário
+            const stringValue = String(value).replace(/"/g, '""');
+            return `"${stringValue}"`;
+        }).join(',');
+    });
+    
+    return [header, ...rows].join('\n');
+}
+
+// Função para gerar nome do arquivo
+function generateFilename(extension) {
+    const endpointParts = currentEndpoint.split('/').filter(part => part);
+    const categoria = endpointParts[0];
+    const subcategoria = endpointParts[1];
+    
+    let filename = `embrapa_${categoria}`;
+    if (subcategoria) {
+        filename += `_${subcategoria}`;
+    }
+    filename += `_${currentYear}.${extension}`;
+    
+    return filename;
+}
+
+// Função auxiliar para fazer download do arquivo
+function downloadFile(url, filename) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Limpar URL do objeto
+    URL.revokeObjectURL(url);
+}
