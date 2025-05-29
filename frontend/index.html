@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Produção Vinhos EMBRAPA - Frontend</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍇 API Produção Vinhos EMBRAPA</h1>
+            <p>Consulte dados sobre produção, comercialização, processamento, importação e exportação de vinhos no Rio Grande do Sul</p>
+        </header>
+
+        <main>
+            <div class="form-section">
+                <h2>Consultar Dados</h2>
+                <form id="consultaForm">
+                    <div class="form-group">
+                        <label for="categoria">Categoria:</label>
+                        <select id="categoria" required>
+                            <option value="">Selecione uma categoria</option>
+                            <option value="producao">Produção</option>
+                            <option value="comercializacao">Comercialização</option>
+                            <option value="processamento">Processamento</option>
+                            <option value="importacao">Importação</option>
+                            <option value="exportacao">Exportação</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="subcategoriaGroup" style="display: none;">
+                        <label for="subcategoria">Subcategoria:</label>
+                        <select id="subcategoria">
+                            <option value="">Selecione uma subcategoria</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ano">Ano:</label>
+                        <input type="number" id="ano" min="1970" max="2024" required placeholder="Ex: 2023">
+                    </div>
+
+                    <button type="submit" id="consultarBtn">Consultar</button>
+                </form>
+            </div>
+
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Carregando dados...</p>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>Resultados</h2>
+                <div class="result-header" id="resultHeader"></div>
+                <div class="result-content" id="resultContent"></div>
+            </div>
+
+            <div class="error-section" id="errorSection" style="display: none;">
+                <h2>❌ Erro</h2>
+                <p id="errorMessage"></p>
+            </div>
+        </main>
+
+        <footer>
+            <p>Dados fornecidos pela EMBRAPA - Sistema de Viticultura</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
