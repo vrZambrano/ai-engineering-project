@@ -4,3 +4,4 @@ uvicorn==0.34.2
 requests==2.32.3
 beautifulsoup4==4.13.4
 logging==0.4.9.6
+gunicorn==22.0.0

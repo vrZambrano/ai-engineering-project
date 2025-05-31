@@ -38,10 +38,3 @@ async def root():
 
 # Inclui o router com todos os endpoints da API
 app.include_router(router)
-
-if __name__ == "__main__":
-    import uvicorn
-    logger.info("🚀 Iniciando servidor...")
-    logger.info("📊 API disponível em: http://localhost:8888/docs")
-    logger.info("🌐 Frontend disponível em: http://localhost:8888")
-    uvicorn.run("main:app", host="0.0.0.0", port=8888, reload=True)
