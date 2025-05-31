@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
-from api.models import (
+from src.api.models import (
     ProducaoResponse, 
     ComercializacaoResponse, 
     ProcessamentoResponse, 
     ProcessamentoSemClassificacaoResponse,
     ImportacaoExportacaoResponse
 )
-from data.embrapa_scraper import (
+from src.data.embrapa_scraper import (
     fetch_and_parse_producao,
     fetch_and_parse_comercializacao,
     fetch_and_parse_processamento,
