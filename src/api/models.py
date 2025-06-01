@@ -4,77 +4,77 @@ from typing import List, Optional
 
 class SubItem(BaseModel):
     """Modelo para subitens de produção/comercialização."""
-    produto: str
-    quantidade_litros: str
+    produto: str = Field(..., description="Nome do produto")
+    quantidade_litros: str = Field(..., description="Quantidade em litros")
 
 
 class ItemProducaoComercio(BaseModel):
     """Modelo para itens de produção ou comercialização."""
-    produto: str
-    quantidade_litros: str
-    subitems: List[SubItem] = []
+    produto: str = Field(..., description="Nome do produto")
+    quantidade_litros: str = Field(..., description="Quantidade em litros")
+    subitems: List[SubItem] = Field(default=[], description="Lista de subitens do produto")
 
 
 class ProducaoResponse(BaseModel):
     """Modelo de resposta para endpoints de produção."""
-    ano: int
-    dados: List[ItemProducaoComercio]
-    total_geral_litros: Optional[str] = None
+    ano: int = Field(..., description="Ano da produção")
+    dados: List[ItemProducaoComercio] = Field(..., description="Lista de dados de produção")
+    total_geral_litros: Optional[str] = Field(None, description="Total geral em litros")
 
 
 class ComercializacaoResponse(BaseModel):
     """Modelo de resposta para endpoints de comercialização."""
-    ano: int
-    dados: List[ItemProducaoComercio]
-    total_geral_litros: Optional[str] = None
+    ano: int = Field(..., description="Ano da comercialização")
+    dados: List[ItemProducaoComercio] = Field(..., description="Lista de dados de comercialização")
+    total_geral_litros: Optional[str] = Field(None, description="Total geral em litros")
 
 
 class Cultivar(BaseModel):
     """Modelo para cultivares em processamento."""
-    cultivar: str
-    quantidade_kg: str
+    cultivar: str = Field(..., description="Nome da cultivar")
+    quantidade_kg: str = Field(..., description="Quantidade em quilogramas")
 
 
 class CategoriaProcessamento(BaseModel):
     """Modelo para categorias de processamento com cultivares."""
-    categoria: str
-    quantidade_kg: str
-    cultivares: List[Cultivar] = []
+    categoria: str = Field(..., description="Nome da categoria")
+    quantidade_kg: str = Field(..., description="Quantidade total em quilogramas")
+    cultivares: List[Cultivar] = Field(default=[], description="Lista de cultivares da categoria")
 
 
 class ItemProcessamentoSemClassificacao(BaseModel):
     """Modelo para itens de processamento sem classificação."""
-    item: str
-    quantidade_kg: str
+    item: str = Field(..., description="Nome do item")
+    quantidade_kg: str = Field(..., description="Quantidade em quilogramas")
 
 
 class ProcessamentoResponse(BaseModel):
     """Modelo de resposta para endpoints de processamento."""
-    ano: int
-    tipo_processamento: str
-    dados: List[CategoriaProcessamento]
-    total_geral_kg: Optional[str] = None
+    ano: int = Field(..., description="Ano do processamento")
+    tipo_processamento: str = Field(..., description="Tipo de processamento (viníferas, americanas-híbridas, etc.)")
+    dados: List[CategoriaProcessamento] = Field(..., description="Lista de dados de processamento")
+    total_geral_kg: Optional[str] = Field(None, description="Total geral em quilogramas")
 
 
 class ProcessamentoSemClassificacaoResponse(BaseModel):
     """Modelo de resposta para processamento sem classificação."""
-    ano: int
-    tipo_processamento: str
-    dados: List[ItemProcessamentoSemClassificacao]
-    total_geral_kg: Optional[str] = None
+    ano: int = Field(..., description="Ano do processamento")
+    tipo_processamento: str = Field(..., description="Tipo de processamento")
+    dados: List[ItemProcessamentoSemClassificacao] = Field(..., description="Lista de itens sem classificação")
+    total_geral_kg: Optional[str] = Field(None, description="Total geral em quilogramas")
 
 
 class PaisImportacaoExportacao(BaseModel):
     """Modelo para países em importação/exportação."""
-    pais: str
-    quantidade_kg: str
-    valor_usd: str
+    pais: str = Field(..., description="Nome do país")
+    quantidade_kg: str = Field(..., description="Quantidade em quilogramas")
+    valor_usd: str = Field(..., description="Valor em dólares americanos")
 
 
 class ImportacaoExportacaoResponse(BaseModel):
     """Modelo de resposta para endpoints de importação/exportação."""
-    ano: int
-    tipo_produto: str
-    dados: List[PaisImportacaoExportacao]
-    total_geral_kg: Optional[str] = None
-    total_geral_valor_us: Optional[str] = None
+    ano: int = Field(..., description="Ano da importação/exportação")
+    tipo_produto: str = Field(..., description="Tipo de produto (vinho de mesa, espumante, etc.)")
+    dados: List[PaisImportacaoExportacao] = Field(..., description="Lista de dados por país")
+    total_geral_kg: Optional[str] = Field(None, description="Total geral em quilogramas")
+    total_geral_valor_us: Optional[str] = Field(None, description="Total geral em dólares americanos")

@@ -46,38 +46,17 @@ O frontend permite consultar os seguintes endpoints da API:
 
 ## 🚀 Como usar
 
-### Pré-requisitos
 
-1. **API Backend rodando**: Certifique-se de que a API FastAPI está rodando em `http://localhost:8888`
-
-   ```bash
-   cd ai-engineering-project/src
-   python main.py
-   ```
 
 ### Executando o Frontend
 
-1. **Abrir o arquivo HTML**: Simplesmente abra o arquivo `index.html` em um navegador web moderno
+
+ **Usando um servidor local** (recomendado para evitar problemas de CORS):
 
    ```bash
-   # No diretório do frontend
-   open index.html
-   # ou
-   firefox index.html
-   # ou
-   google-chrome index.html
-   ```
-
-2. **Usando um servidor local** (recomendado para evitar problemas de CORS):
-
-   ```bash
-   # Python 3
-   python -m http.server 3000
+    gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app -b 0.0.0.0:8888
    
-   # Node.js (se tiver o http-server instalado)
-   npx http-server -p 3000
-   
-   # Depois acesse: http://localhost:3000
+   # Depois acesse: http://localhost:8888
    ```
 
 ## 🎯 Como usar a interface
@@ -97,20 +76,6 @@ O frontend permite consultar os seguintes endpoints da API:
 - **JavaScript (ES6+)**: Lógica da aplicação, requisições à API e manipulação do DOM
 - **Fetch API**: Para fazer requisições HTTP à API
 
-## 📱 Design Responsivo
-
-O frontend foi desenvolvido com design responsivo, funcionando bem em:
-- 💻 Desktop
-- 📱 Tablets
-- 📱 Smartphones
-
-## 🎨 Características do Design
-
-- **Interface moderna**: Design limpo com gradientes e efeitos visuais
-- **Feedback visual**: Loading spinner durante requisições
-- **Tratamento de erros**: Mensagens de erro claras e informativas
-- **Formatação de dados**: Dados numéricos formatados para o padrão brasileiro
-- **Tabelas responsivas**: Exibição organizada dos dados retornados pela API
 
 ## 🔧 Configuração
 

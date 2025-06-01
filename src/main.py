@@ -10,7 +10,14 @@ from src.api.endpoints import router
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="API Produção Vinhos EMBRAPA")
+app = FastAPI(
+    title="API Produção Vinhos EMBRAPA",
+    description="API para consulta de dados de produção, comercialização, processamento e comércio exterior de vinhos e derivados do Rio Grande do Sul, baseada nos dados da EMBRAPA.",
+    version="1.0.0",
+    docs_url="/docs",  # URL para Swagger UI
+    redoc_url="/redoc",  # URL para ReDoc
+    openapi_url="/openapi.json"  # URL para o schema OpenAPI
+)
 
 # Configuração do CORS
 app.add_middleware(
@@ -35,6 +42,13 @@ else:
 @app.get("/")
 async def root():
     return RedirectResponse(url="/static/index.html")
+
+
+# Rota para facilitar acesso ao Swagger
+@app.get("/swagger")
+async def swagger():
+    return RedirectResponse(url="/docs")
+
 
 # Inclui o router com todos os endpoints da API
 app.include_router(router)
