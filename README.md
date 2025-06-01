@@ -1,29 +1,52 @@
 # API de Dados Vitivinícolas EMBRAPA
 
-Esta é uma API FastAPI completa que fornece acesso aos dados vitivinícolas do Rio Grande do Sul através de web scraping do site da Embrapa Vitibrasil. A API oferece dados sobre produção de vinhos e processamento de diferentes tipos de uvas.
+Esta é uma API FastAPI completa que fornece acesso aos dados vitivinícolas do Rio Grande do Sul através de web scraping do site da Embrapa Vitibrasil. A API oferece dados sobre produção, comercialização, processamento de uvas e comércio exterior de vinhos e derivados.
 
 ## 🍇 Funcionalidades
 
-A API oferece 5 endpoints principais organizados em duas categorias:
+A API oferece **15 endpoints** organizados em **5 categorias principais**:
 
-### **Produção de Vinhos**
+### **1. Produção de Vinhos**
 - **`/producao`** - Dados de produção anual de vinhos e derivados (em litros)
 
-### **Processamento de Uvas**
+### **2. Comercialização**
+- **`/comercializacao`** - Dados de comercialização anual de vinhos e derivados (em litros)
+
+### **3. Processamento de Uvas**
 - **`/processamento/viniferas`** - Processamento de uvas viníferas (em kg)
-- **`/processamento/americanas_hibridas`** - Processamento de uvas americanas e híbridas (em kg)
-- **`/processamento/uvas_mesa`** - Processamento de uvas de mesa (em kg)
-- **`/processamento/sem_classificacao`** - Processamento de uvas sem classificação (em kg)
+- **`/processamento/americanas-hibridas`** - Processamento de uvas americanas e híbridas (em kg)
+- **`/processamento/uvas-mesa`** - Processamento de uvas de mesa (em kg)
+- **`/processamento/sem-classificacao`** - Processamento de uvas sem classificação (em kg)
+
+### **4. Importação**
+- **`/importacao/vinho-mesa`** - Importação de vinhos de mesa
+- **`/importacao/espumante`** - Importação de espumantes
+- **`/importacao/uvas-frescas`** - Importação de uvas frescas
+- **`/importacao/uvas-passas`** - Importação de uvas passas
+- **`/importacao/suco-uva`** - Importação de suco de uva
+
+### **5. Exportação**
+- **`/exportacao/vinho-mesa`** - Exportação de vinhos de mesa
+- **`/exportacao/espumante`** - Exportação de espumantes
+- **`/exportacao/uvas-frescas`** - Exportação de uvas frescas
+- **`/exportacao/suco-uva`** - Exportação de suco de uva
 
 ## 🏗️ Arquitetura
 
 ```
 ai-engineering-project/
 ├── src/
-│   ├── main.py                    # API FastAPI com todos os endpoints
+│   ├── main.py                    # API FastAPI com configuração CORS e frontend
 │   ├── data/
 │   │   └── embrapa_scraper.py     # Módulo de parsing HTML especializado
-│   └── api/                       # Estrutura para expansões futuras
+│   └── api/
+│       ├── endpoints.py           # Definição de todos os endpoints
+│       └── models.py              # Modelos Pydantic para validação
+├── frontend/                      # Interface web para consumir a API
+│   ├── index.html                 # Página principal do frontend
+│   ├── script.js                  # Lógica JavaScript
+│   ├── styles.css                 # Estilos CSS
+│   └── README.md                  # Documentação do frontend
 ├── tests/                         # Testes unitários
 ├── docs/                          # Documentação adicional
 ├── requirements.txt               # Dependências Python
@@ -32,19 +55,24 @@ ai-engineering-project/
 
 ### Características Técnicas
 
-- **Arquitetura Modular**: Separação clara entre lógica de API e parsing de dados
+- **Arquitetura Modular**: Separação clara entre lógica de API, parsing de dados e frontend
+- **Frontend Integrado**: Interface web servida estaticamente pela própria API
 - **Retry com Backoff Exponencial**: Mecanismo robusto de tentativas com jitter
 - **Logging Estruturado**: Rastreamento completo de operações e erros
 - **Tratamento de Erros Específicos**: Códigos HTTP apropriados para diferentes falhas
 - **Parsing HTML Especializado**: Funções dedicadas para cada tipo de tabela
+- **CORS Configurado**: Permite acesso de qualquer origem
+- **Validação com Pydantic**: Modelos de dados tipados e validados
 
 ## 📋 Requisitos
 
-- Python 3.7+
+- Python 3.9+
 - FastAPI
 - Uvicorn
+- Gunicorn
 - Requests
 - BeautifulSoup4
+- Pydantic
 
 ### Instalação
 
@@ -62,24 +90,46 @@ pip install -r requirements.txt
 ### Desenvolvimento
 ```bash
 # A partir do diretório raiz do projeto
-uvicorn src.main:app --host 0.0.0.0 --port 8888 --reload
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app -b 0.0.0.0:8888 --reload
 ```
 
 ### Produção
 ```bash
-uvicorn src.main:app --host 0.0.0.0 --port 8888
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app -b 0.0.0.0:8888
 ```
 
-### Execução Direta
-```bash
-# Execute o arquivo main.py diretamente
-cd src
-python main.py
-```
+### Acessando a Aplicação
 
-A API estará disponível em: `http://localhost:8888`
+Após iniciar o servidor, você pode acessar:
+
+- **Frontend Web**: `http://localhost:8888/` (interface gráfica para usar a API)
+- **Swagger UI**: `http://localhost:8888/docs` ou `http://localhost:8888/swagger`
+- **ReDoc**: `http://localhost:8888/redoc`
+
+## 🌐 Frontend Web
+
+O projeto inclui um **frontend web completo** que permite consultar todos os endpoints da API através de uma interface gráfica intuitiva.
+
+### Funcionalidades do Frontend:
+- **Interface responsiva** com design moderno
+- **Seleção dinâmica** de categorias e subcategorias
+- **Validação de anos** conforme o período disponível
+- **Exibição organizada** dos dados em tabelas e cards
+- **Tratamento de erros** com mensagens informativas
+- **Integração completa** com todos os 15 endpoints da API
+
+### Como usar o Frontend:
+1. Acesse `http://localhost:8888/`
+2. Selecione uma categoria (Produção, Comercialização, etc.)
+3. Escolha uma subcategoria quando aplicável
+4. Digite o ano desejado
+5. Clique em "Consultar" para ver os resultados
 
 ## 📚 Documentação dos Endpoints
+
+### Períodos de Dados Disponíveis:
+- **Produção, Comercialização e Processamento**: 1970-2023
+- **Importação e Exportação**: 1970-2024
 
 ### 1. Produção de Vinhos
 
@@ -117,27 +167,24 @@ curl "http://localhost:8888/producao?ano=2022"
           "quantidade_litros": "1988968"
         }
       ]
-    },
-    {
-      "produto": "VINHO FINO DE MESA (VINIFERA)",
-      "quantidade_litros": "47511796",
-      "subitems": [
-        {
-          "produto": "Tinto",
-          "quantidade_litros": "24417918"
-        },
-        {
-          "produto": "Branco",
-          "quantidade_litros": "23093878"
-        }
-      ]
     }
   ],
   "total_geral_litros": "308352487"
 }
 ```
 
-### 2. Processamento de Uvas Viníferas
+### 2. Comercialização
+
+#### `GET /comercializacao`
+
+Dados de comercialização anual de vinhos e derivados no Rio Grande do Sul.
+
+**Parâmetros:**
+- `ano` (obrigatório): Ano da comercialização (1970-2023)
+
+**Estrutura de resposta similar ao endpoint de produção.**
+
+### 3. Processamento de Uvas
 
 #### `GET /processamento/viniferas`
 
@@ -148,13 +195,13 @@ Dados de processamento anual de uvas viníferas por cultivar.
 
 **Exemplo de Requisição:**
 ```bash
-curl "http://localhost:8888/processamento/viniferas?ano=2022"
+curl "http://localhost:8888/processamento/viniferas?ano=2020"
 ```
 
 **Exemplo de Resposta:**
 ```json
 {
-  "ano": 2022,
+  "ano": 2020,
   "dados": [
     {
       "categoria": "TINTAS",
@@ -169,72 +216,61 @@ curl "http://localhost:8888/processamento/viniferas?ano=2022"
           "quantidade_kg": "9876543"
         }
       ]
-    },
-    {
-      "categoria": "BRANCAS E ROSADAS",
-      "quantidade_kg": "23456789",
-      "cultivares": [
-        {
-          "cultivar": "Chardonnay",
-          "quantidade_kg": "8765432"
-        }
-      ]
     }
   ],
   "total_geral_kg": "68580245"
 }
 ```
 
-### 3. Processamento de Uvas Americanas e Híbridas
+#### Outros endpoints de processamento:
+- **`GET /processamento/americanas-hibridas`** - Uvas americanas e híbridas
+- **`GET /processamento/uvas-mesa`** - Uvas de mesa
+- **`GET /processamento/sem-classificacao`** - Uvas sem classificação
 
-#### `GET /processamento/americanas_hibridas`
+### 4. Importação
 
-Dados de processamento anual de uvas americanas e híbridas.
+Todos os endpoints de importação seguem o padrão `GET /importacao/{produto}` com período 1970-2024:
 
-**Parâmetros:**
-- `ano` (obrigatório): Ano do processamento (1970-2023)
-
-**Estrutura de resposta similar ao endpoint de viníferas, mas com cultivares americanas e híbridas.**
-
-### 4. Processamento de Uvas de Mesa
-
-#### `GET /processamento/uvas_mesa`
-
-Dados de processamento anual de uvas de mesa por cultivar.
-
-**Parâmetros:**
-- `ano` (obrigatório): Ano do processamento (1970-2023)
-
-**Estrutura de resposta similar, organizada por categorias de uvas de mesa.**
-
-### 5. Processamento de Uvas Sem Classificação
-
-#### `GET /processamento/sem_classificacao`
-
-Dados de processamento anual de uvas sem classificação específica.
-
-**Parâmetros:**
-- `ano` (obrigatório): Ano do processamento (1970-2023)
+- **`/importacao/vinho-mesa`** - Importação de vinhos de mesa
+- **`/importacao/espumante`** - Importação de espumantes
+- **`/importacao/uvas-frescas`** - Importação de uvas frescas
+- **`/importacao/uvas-passas`** - Importação de uvas passas
+- **`/importacao/suco-uva`** - Importação de suco de uva
 
 **Exemplo de Resposta:**
 ```json
 {
   "ano": 2022,
+  "tipo": "importação",
+  "produto": "vinho-mesa",
   "dados": [
     {
-      "item": "SEM CLASSIFICAÇÃO",
-      "quantidade_kg": "1234567"
+      "pais": "Argentina",
+      "quantidade": "1234567",
+      "valor_usd": "2345678"
     }
   ],
-  "total_geral_kg": "1234567"
+  "total_quantidade": "5678901",
+  "total_valor_usd": "6789012"
 }
 ```
+
+### 5. Exportação
+
+Todos os endpoints de exportação seguem o padrão `GET /exportacao/{produto}` com período 1970-2024:
+
+- **`/exportacao/vinho-mesa`** - Exportação de vinhos de mesa
+- **`/exportacao/espumante`** - Exportação de espumantes
+- **`/exportacao/uvas-frescas`** - Exportação de uvas frescas
+- **`/exportacao/suco-uva`** - Exportação de suco de uva
+
+**Estrutura de resposta similar aos endpoints de importação.**
 
 ## ⚠️ Códigos de Erro
 
 Todos os endpoints podem retornar os seguintes códigos de erro:
 
-- **400 Bad Request**: Parâmetro `ano` ausente ou fora do intervalo (1970-2023)
+- **400 Bad Request**: Parâmetro `ano` ausente ou fora do intervalo permitido
 - **422 Unprocessable Entity**: Parâmetro `ano` não é um inteiro válido
 - **500 Internal Server Error**: Erro no processamento ou parsing dos dados
 - **502 Bad Gateway**: Erro genérico ao acessar o site da Embrapa
@@ -254,11 +290,10 @@ Todos os endpoints podem retornar os seguintes códigos de erro:
 
 O módulo `embrapa_scraper.py` contém funções especializadas para cada tipo de tabela:
 
-- `parse_table_producao()`: Tabelas de produção com estrutura hierárquica
-- `parse_table_processamento_viniferas()`: Tabelas de processamento por cultivar
-- `parse_table_processamento_americanas_hibridas()`: Uvas americanas e híbridas
-- `parse_table_processamento_uvas_mesa()`: Uvas de mesa
-- `parse_table_processamento_sem_classificacao()`: Dados sem classificação
+- `fetch_and_parse_producao()`: Tabelas de produção com estrutura hierárquica
+- `fetch_and_parse_comercializacao()`: Tabelas de comercialização
+- `fetch_and_parse_processamento()`: Tabelas de processamento por cultivar
+- `fetch_and_parse_comex()`: Tabelas de comércio exterior (importação/exportação)
 
 ### Logging
 
@@ -268,38 +303,56 @@ O sistema registra:
 - Erros de parsing e processamento
 - Tempos de retry e backoff
 
-## 📊 Documentação Interativa
+### Frontend Integrado
 
-Após iniciar a API, acesse:
-
-- **Swagger UI**: `http://localhost:8888/docs`
-- **ReDoc**: `http://localhost:8888/redoc`
+- **Servido estaticamente** pela própria API FastAPI
+- **Rota raiz** (`/`) redireciona automaticamente para o frontend
+- **CORS configurado** para permitir requisições do frontend
+- **Design responsivo** compatível com desktop e mobile
 
 ## 🔍 Exemplos de Uso
 
-### Comparar Produção vs Processamento
-```bash
-# Produção de vinhos em 2022 (litros)
-curl "http://localhost:8888/producao?ano=2022"
-
-# Processamento de uvas viníferas em 2022 (kg)
-curl "http://localhost:8888/processamento/viniferas?ano=2022"
+### Via Frontend Web
+```
+1. Acesse http://localhost:8888/
+2. Use a interface gráfica para consultar qualquer endpoint
+3. Acesse http://localhost:8888/docs para utilizar o Swagger
 ```
 
-### Análise Temporal
+### Via API REST
+
+#### Comparar Produção vs Comercialização
 ```bash
-# Dados de diferentes anos
+# Produção de vinhos em 2022
+curl "http://localhost:8888/producao?ano=2022"
+
+# Comercialização de vinhos em 2022
+curl "http://localhost:8888/comercializacao?ano=2022"
+```
+
+#### Análise de Comércio Exterior
+```bash
+# Importação de vinhos de mesa em 2023
+curl "http://localhost:8888/importacao/vinho-mesa?ano=2023"
+
+# Exportação de vinhos de mesa em 2023
+curl "http://localhost:8888/exportacao/vinho-mesa?ano=2023"
+```
+
+#### Análise por Tipo de Uva
+```bash
+# Diferentes tipos de processamento em 2022
+curl "http://localhost:8888/processamento/viniferas?ano=2022"
+curl "http://localhost:8888/processamento/americanas-hibridas?ano=2022"
+curl "http://localhost:8888/processamento/uvas-mesa?ano=2022"
+```
+
+#### Análise Temporal
+```bash
+# Evolução da produção ao longo dos anos
 curl "http://localhost:8888/producao?ano=2020"
 curl "http://localhost:8888/producao?ano=2021"
 curl "http://localhost:8888/producao?ano=2022"
-```
-
-### Análise por Tipo de Uva
-```bash
-# Diferentes tipos de processamento
-curl "http://localhost:8888/processamento/viniferas?ano=2022"
-curl "http://localhost:8888/processamento/americanas_hibridas?ano=2022"
-curl "http://localhost:8888/processamento/uvas_mesa?ano=2022"
 ```
 
 ## 📝 Observações Importantes
@@ -309,22 +362,32 @@ curl "http://localhost:8888/processamento/uvas_mesa?ano=2022"
 2. **Formato de Números**: Os valores são retornados como strings no formato brasileiro (ex: "195.031.611"). A conversão para números pode ser feita pelo cliente.
 
 3. **Diferença de Unidades**: 
-   - Produção: medida em **litros**
-   - Processamento: medido em **quilogramas**
+   - **Produção e Comercialização**: medidas em **litros**
+   - **Processamento**: medido em **quilogramas**
+   - **Importação e Exportação**: quantidade em **kg** e valor em **USD**
 
-4. **Período de Dados**: Disponível para anos entre 1970 e 2023 (conforme disponibilidade no site da Embrapa).
+4. **Períodos de Dados**: 
+   - **Produção, Comercialização e Processamento**: 1970-2023
+   - **Importação e Exportação**: 1970-2024
 
 5. **Rate Limiting**: O sistema implementa delays automáticos para não sobrecarregar o servidor da Embrapa.
 
-## 🤝 Contribuição
+6. **Frontend Integrado**: A aplicação serve tanto a API quanto uma interface web completa no mesmo servidor.
 
-Para contribuir com o projeto:
+## 🛠️ Tecnologias Utilizadas
 
-1. Faça um fork do repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
+### Backend
+- **FastAPI**: Framework web moderno e rápido
+- **Pydantic**: Validação de dados e serialização
+- **Uvicorn/Gunicorn**: Servidor ASGI para produção
+- **Requests**: Cliente HTTP para web scraping
+- **BeautifulSoup4**: Parser HTML para extração de dados
+
+### Frontend
+- **HTML5**: Estrutura da interface
+- **CSS3**: Estilização responsiva com gradientes e animações
+- **JavaScript ES6+**: Lógica da aplicação e requisições à API
+- **Fetch API**: Comunicação com a API REST
 
 ## 📄 Licença
 
