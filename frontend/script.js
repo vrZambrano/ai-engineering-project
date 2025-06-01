@@ -540,68 +540,95 @@ function convertToCSV(data) {
     if (!data.dados || !Array.isArray(data.dados) || data.dados.length === 0) {
         return 'Nenhum dado disponível';
     }
-    
-    // Função para achatar objetos aninhados
-    function flattenObject(obj, prefix = '') {
-        const flattened = {};
-        
-        for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                const value = obj[key];
-                const newKey = prefix ? `${prefix}_${key}` : key;
-                
-                if (Array.isArray(value)) {
-                    // Para arrays, criar uma string concatenada
-                    if (value.length > 0 && typeof value[0] === 'object') {
-                        // Array de objetos - criar string formatada
-                        flattened[newKey] = value.map(item => {
-                            if (item.cultivar && item.quantidade_kg) {
-                                return `${item.cultivar}: ${item.quantidade_kg}`;
-                            } else if (item.produto && item.quantidade_litros) {
-                                return `${item.produto}: ${item.quantidade_litros}`;
-                            } else {
-                                return JSON.stringify(item);
-                            }
-                        }).join('; ');
-                    } else {
-                        flattened[newKey] = value.join('; ');
-                    }
-                } else if (typeof value === 'object' && value !== null) {
-                    // Objeto aninhado - achatar recursivamente
-                    Object.assign(flattened, flattenObject(value, newKey));
-                } else {
-                    flattened[newKey] = value;
-                }
+
+    const processedRows = [];
+    const endpointParts = currentEndpoint.split('/').filter(part => part);
+    const categoria = endpointParts[0];
+
+    data.dados.forEach(item => {
+        if (categoria === 'producao' || categoria === 'comercializacao') {
+            // Para produção e comercialização, expandir subitems conforme especificado
+            if (item.subitems && Array.isArray(item.subitems) && item.subitems.length > 0) {
+                item.subitems.forEach(subitem => {
+                    const row = {
+                        total_produto: item.produto || '',
+                        produto: subitem.produto || '',
+                        quantidade_litros: subitem.quantidade_litros || ''
+                    };
+                    processedRows.push(row);
+                });
+            } else {
+                // Se não tem subitems, criar linha apenas com dados principais
+                const row = {
+                    total_produto: item.produto || '',
+                    produto: '',
+                    quantidade_litros: ''
+                };
+                processedRows.push(row);
             }
+        } else if (categoria === 'processamento') {
+            // Para processamento, expandir cultivares
+            if (item.cultivares && Array.isArray(item.cultivares) && item.cultivares.length > 0) {
+                item.cultivares.forEach(cultivar => {
+                    const row = {
+                        categoria: item.categoria || item.produto || '',
+                        cultivar: cultivar.cultivar || '',
+                        quantidade_kg: cultivar.quantidade_kg || ''
+                    };
+                    processedRows.push(row);
+                });
+            } else {
+                // Se não tem cultivares, criar linha apenas com dados principais
+                const row = {
+                    categoria: item.categoria || item.produto || '',
+                    cultivar: '',
+                    quantidade_kg: ''
+                };
+                processedRows.push(row);
+            }
+        } else {
+            // Para outras categorias (importação/exportação), usar estrutura simples
+            const row = {};
+            Object.keys(item).forEach(key => {
+                if (Array.isArray(item[key])) {
+                    row[key] = item[key].join('; ');
+                } else if (typeof item[key] === 'object' && item[key] !== null) {
+                    row[key] = JSON.stringify(item[key]);
+                } else {
+                    row[key] = item[key] || '';
+                }
+            });
+            processedRows.push(row);
         }
-        
-        return flattened;
+    });
+
+    if (processedRows.length === 0) {
+        return 'Nenhum dado para exibir em CSV após processamento.';
     }
-    
-    // Achatar todos os objetos de dados
-    const flattenedData = data.dados.map(item => flattenObject(item));
-    
-    if (flattenedData.length === 0) {
-        return 'Nenhum dado disponível';
+
+    // Definir ordem das colunas baseada na categoria
+    let headers = [];
+    if (categoria === 'producao' || categoria === 'comercializacao') {
+        headers = ['total_produto', 'produto', 'quantidade_litros'];
+    } else if (categoria === 'processamento') {
+        headers = ['categoria', 'cultivar', 'quantidade_kg'];
+    } else {
+        // Para outras categorias, usar todas as chaves encontradas
+        headers = [...new Set(processedRows.flatMap(Object.keys))];
     }
-    
-    // Obter todas as chaves únicas
-    const allKeys = [...new Set(flattenedData.flatMap(Object.keys))];
-    
+
     // Criar cabeçalho CSV
-    const header = allKeys.map(key => `"${key}"`).join(',');
+    const headerRow = headers.map(header => `"${String(header).replace(/"/g, '""')}"`).join(',');
     
-    // Criar linhas CSV
-    const rows = flattenedData.map(item => {
-        return allKeys.map(key => {
-            const value = item[key] || '';
-            // Escapar aspas duplas e envolver em aspas se necessário
-            const stringValue = String(value).replace(/"/g, '""');
-            return `"${stringValue}"`;
+    // Criar linhas de dados
+    const dataRows = processedRows.map(row => {
+        return headers.map(header => {
+            const value = row[header] !== undefined && row[header] !== null ? row[header] : '';
+            return `"${String(value).replace(/"/g, '""')}"`;
         }).join(',');
     });
-    
-    return [header, ...rows].join('\n');
+
+    return [headerRow, ...dataRows].join('\n');
 }
 
 // Função para gerar nome do arquivo
