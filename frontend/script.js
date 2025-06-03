@@ -551,7 +551,7 @@ function convertToCSV(data) {
             if (item.subitems && Array.isArray(item.subitems) && item.subitems.length > 0) {
                 item.subitems.forEach(subitem => {
                     const row = {
-                        total_produto: item.produto || '',
+                        tipo_produto: item.produto || '',
                         produto: subitem.produto || '',
                         quantidade_litros: subitem.quantidade_litros || ''
                     };
@@ -560,7 +560,7 @@ function convertToCSV(data) {
             } else {
                 // Se não tem subitems, criar linha apenas com dados principais
                 const row = {
-                    total_produto: item.produto || '',
+                    tipo_produto: item.produto || '',
                     produto: '',
                     quantidade_litros: ''
                 };
@@ -609,7 +609,7 @@ function convertToCSV(data) {
     // Definir ordem das colunas baseada na categoria
     let headers = [];
     if (categoria === 'producao' || categoria === 'comercializacao') {
-        headers = ['total_produto', 'produto', 'quantidade_litros'];
+        headers = ['tipo_produto', 'produto', 'quantidade_litros'];
     } else if (categoria === 'processamento') {
         headers = ['categoria', 'cultivar', 'quantidade_kg'];
     } else {

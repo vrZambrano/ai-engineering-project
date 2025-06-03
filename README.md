@@ -1,6 +1,18 @@
 # API de Dados Vitivinícolas EMBRAPA
 
-Esta é uma API FastAPI completa que fornece acesso aos dados vitivinícolas do Rio Grande do Sul através de web scraping do site da Embrapa Vitibrasil. A API oferece dados sobre produção, comercialização, processamento de uvas e comércio exterior de vinhos e derivados.
+Esta é uma API FastAPI completa que fornece acesso aos dados vitivinícolas do Rio Grande do Sul através de web scraping do site da [Embrapa Vitibrasil](http://vitibrasil.cnpuv.embrapa.br/index.php). A API oferece dados sobre produção, comercialização, processamento de uvas e comércio exterior de vinhos e derivados.
+
+O processo para captura dos dados envolve web scrapping do site da Embrapa utilizando parsing com BeautifulSoup. Já a aplicação com o portal foi disponibilizado utilizando o [serviço serverless Render](https://render.com/).
+
+## Links
+
+Site: https://ai-engineering-project.onrender.com/static/index.html
+
+Projeto: https://github.com/vrZambrano/ai-engineering-project
+
+Arquitetura: [ai-engineering-project/docs/deployment_architecture.drawio](https://github.com/vrZambrano/ai-engineering-project/blob/main/docs/arquitetura.drawio)
+
+
 
 ## 🍇 Funcionalidades
 
