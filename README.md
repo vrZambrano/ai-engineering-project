@@ -12,7 +12,9 @@ Projeto: https://github.com/vrZambrano/ai-engineering-project
 
 Arquitetura: [ai-engineering-project/docs/deployment_architecture.drawio](https://github.com/vrZambrano/ai-engineering-project/blob/main/docs/arquitetura.drawio)
 
+![image info](./docs/arquitetura.drawio.png)
 
+Documentação do Front End: [README.md](https://github.com/vrZambrano/ai-engineering-project/blob/99aa061f8a7c971f2c2692616c60cb46e42a88d9/frontend/README.md)
 
 ## 🍇 Funcionalidades
 
